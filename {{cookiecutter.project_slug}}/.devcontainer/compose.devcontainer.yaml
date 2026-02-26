@@ -1,0 +1,56 @@
+# This compose file is meant to override the base compose.yaml file
+# to set up a container-based development environment, and it is to be
+# used in conjuction with it. It won't work on its own.
+# To do that, either specify the files with the "-f" CLI option, or
+# set the COMPOSE_FILE environment variable accordingly.
+
+services:
+  app: &django-app
+    build: &dev-build
+      context: .
+      dockerfile: containers/django/Containerfile
+      target: devcontainer
+      args:
+        - uid=${UID:-1000}
+        - build_environment=development
+    restart: unless-stopped
+    environment:
+      - DJANGO_SETTINGS_MODULE={{ cookiecutter.project_slug }}.settings.development
+      - DOCKER_SKIP_MIGRATIONS=yes
+    volumes:
+      - .:/opt/app:z
+      - ./public/media:/opt/app/public/media:z
+      # The following are already in the container image, no need to mount
+      - /opt/app/.venv/
+{%- if cookiecutter.use_vite == "y" %}
+      - /opt/app/node_modules/
+{%- endif %}
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "./manage.py", "check"]
+    command: "sleep infinity"
+    userns_mode: ""
+    deploy:
+      mode: global
+
+  db:
+    env_file:
+      - .devcontainer/db.env
+
+  mailpit:
+    image: docker.io/axllent/mailpit:v1.28
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8025/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    deploy:
+      mode: global
+    ports:
+      - "0.0.0.0:8025:8025"

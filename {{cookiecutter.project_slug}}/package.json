@@ -1,0 +1,22 @@
+{
+	"name": "{{ cookiecutter.project_slug }}",
+	"version": "0.1.0",
+	"description": "{{ cookiecutter.description }}",
+	"author": "{{ cookiecutter.author_name }}",
+	"private": true,
+	"scripts": {
+		"build": "npx vite build --mode=production",
+		"build:verify": "npm run build && test -f static/dist/manifest.json && echo 'Build successful: manifest.json generated'",
+		"dev": "npx vite",
+		"format": "npx @biomejs/biome format --write .",
+		"lint": "npx @biomejs/biome lint --write .",
+		"check": "npx @biomejs/biome check --write .",
+		"biome": "npm run format && npm run lint && npm run check"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.0",
+		"sass": "^1.94.2",
+		"vite": "^7.2.4"
+	},
+	"dependencies": {}
+}

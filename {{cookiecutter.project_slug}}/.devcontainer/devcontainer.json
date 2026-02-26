@@ -1,0 +1,109 @@
+{
+	"name": "{{ cookiecutter.project_name }}",
+	"dockerComposeFile": ["../compose.yaml", "./compose.devcontainer.yaml"],
+	"service": "app",
+	"remoteUser": "django",
+	"containerUser": "django",
+	"updateRemoteUserUID": true,
+	"workspaceFolder": "/opt/app",
+	"overrideCommand": false,
+	"onCreateCommand": ".devcontainer/on-create.sh",
+	"postCreateCommand": ".devcontainer/post-create.sh",
+	"portsAttributes": {
+{%- if cookiecutter.use_vite == "y" %}
+		"5173": {
+			"label": "Vite dev server"
+		},
+{%- endif %}
+		"8000": {
+			"label": "Application",
+			"onAutoForward": "notify"
+		}
+	},
+	"otherPortsAttributes": {
+		"onAutoForward": "ignore",
+		"requireLocalPort": true
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+{%- if cookiecutter.use_vite == "y" %}
+				"biomejs.biome",
+				"christian-kohler.npm-intellisense",
+{%- endif %}
+				"batisteo.vscode-django",
+				"charliermarsh.ruff",
+				"docker.docker",
+				"EditorConfig.EditorConfig",
+				"foxundermoon.shell-format",
+				"monosans.djlint",
+				"ms-python.mypy-type-checker",
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"redhat.vscode-yaml",
+				"tamasfe.even-better-toml",
+				"mtxr.sqltools-driver-pg"
+			],
+			"settings": {
+				"terminal.integrated.automationProfile.linux": {
+					"path": "/bin/bash",
+					"icon": "debug"
+				},
+				"terminal.integrated.defaultProfile.linux": "fish",
+				"terminal.integrated.profiles.linux": {
+					"bash": {
+						"path": "bash",
+						"icon": "terminal-bash"
+					},
+					"fish": {
+						"path": "fish",
+						"icon": "terminal"
+					}
+				},
+				"python.defaultInterpreterPath": "/opt/app/.venv/bin/python",
+				"python.venvPath": "/opt/app/.venv",
+				"python.createEnvironment.contentButton": "hide",
+				"python.terminal.shellIntegration.enabled": true,
+				"python.terminal.activateEnvInCurrentTerminal": false,
+				"python.terminal.activateEnvironment": false,
+				"python.useEnvironmentsExtension": true,
+				"python.analysis.languageServerMode": "full",
+				"python.analysis.inlayHints.pytestParameters": true,
+				"python.analysis.diagnosticMode": "workspace",
+				"python.analysis.nodeExecutable": "",
+				"python.analysis.fixAll": [
+					"source.unusedImports",
+					"source.convertImportFormat"
+				],
+				"python.analysis.packageIndexDepths": [
+					{
+						"name": "",
+						"depth": 8
+					}
+				],
+				"python.testing.unittestEnabled": false,
+				"python.testing.pytestEnabled": true,
+				"ruff.importStrategy": "fromEnvironment",
+				"ruff.configurationPreference": "filesystemFirst",
+				"mypy-type-checker.importStrategy": "fromEnvironment",
+				"mypy-type-checker.preferDaemon": true,
+{%- if cookiecutter.use_vite == "y" %}
+				"biome.lsp.bin": "/opt/app/node_modules/.bin/biome",
+{%- endif %}
+				"sqltools.connections": [
+					{
+						"ssh": "Disabled",
+						"previewLimit": 50,
+						"server": "db",
+						"port": 5432,
+						"driver": "PostgreSQL",
+						"database": "postgres",
+						"password": "debug",
+						"username": "postgres",
+						"name": "postgres"
+					}
+				]
+			}
+		}
+	}
+}

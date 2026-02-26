@@ -1,0 +1,179 @@
+# Global build arguments for all stages
+ARG uv_version=0.10
+{%- if cookiecutter.use_vite == "y" %}
+ARG nodejs_version={{ cookiecutter.node_version }}
+{%- endif %}
+ARG alpine_version=3.23
+{%- if cookiecutter.use_vite == "y" %}
+ARG nodejs_tag=${nodejs_version}-alpine${alpine_version}
+{%- endif %}
+
+# Note: Python version is determined by the `.python-version` file copied in later stages
+
+{% if cookiecutter.use_vite == "y" -%}
+FROM docker.io/library/node:${nodejs_tag} AS node-base
+
+ARG build_environment=production
+ARG app_home=/opt/app
+
+FROM node-base AS frontend-builder
+
+ENV NODE_ENV=${build_environment}
+
+WORKDIR ${app_home}
+
+COPY ./package.json ${app_home}
+COPY ./package-lock.json ${app_home}
+COPY ./.npmrc ${app_home}
+
+RUN npm install --include=dev
+
+COPY vite.config.js ${app_home}
+COPY ./static ${app_home}/static
+
+RUN npm run build
+
+{% endif -%}
+FROM docker.io/library/alpine:${alpine_version} AS alpine-base
+
+# Install required system dependencies with system package manager.
+RUN --mount=type=cache,target=/var/cache/apk \
+  apk add shadow bash \
+  # required by Django for timezone support
+  tzdata \
+  # required by psycopg
+  libpq-dev \
+  # required by Django i18n module
+  gettext
+
+FROM ghcr.io/astral-sh/uv:${uv_version} AS uv-base
+
+FROM alpine-base AS python-base
+
+ARG username=django
+ARG groupname=${username}
+ARG uid=266
+ARG gid=${uid}
+ARG build_environment=production
+ARG user_home=/home/containeruser
+ARG app_home=/opt/app
+ARG venv_base_dir=${app_home}
+ARG venv_dir=${venv_base_dir}/.venv
+
+ENV PYTHONUNBUFFERED=1
+
+COPY --from=uv-base /uv /uvx /bin/
+
+FROM python-base AS django-base
+
+ARG username=django
+ARG groupname=${username}
+ARG uid=266
+ARG gid=${uid}
+ARG user_home=/home/containeruser
+ARG app_home=/opt/app
+
+RUN groupadd --system --gid ${gid} ${groupname};
+RUN useradd --system --create-home --home-dir ${user_home} \
+  --uid ${uid} --gid ${gid} ${username};
+
+# Copy container start script
+COPY ./containers/django/start /start
+
+WORKDIR ${app_home}
+RUN chown ${uid}:${gid} ${app_home}
+
+USER $username
+
+COPY .python-version ${app_home}/.python-version
+# Install Python version
+RUN --mount=type=cache,target=${user_home}/.cache/uv,uid=${uid},gid=${gid} \
+  uv python install --default --project ${app_home}
+
+FROM django-base AS django-builder
+
+ARG username=django
+ARG uid=266
+ARG gid=${uid}
+ARG user_home=/home/containeruser
+ARG app_home=/opt/app
+
+ENV UV_CACHE_DIR=${user_home}/.cache/uv
+ENV UV_LINK_MODE=copy
+
+USER 0
+
+RUN --mount=type=cache,target=/var/cache/apk \
+  apk add build-base
+
+USER $username
+
+COPY pyproject.toml uv.lock ${app_home}/
+
+RUN --mount=type=cache,target=${user_home}/.cache/uv,uid=${uid},gid=${gid} \
+  uv sync --active --frozen --project ${app_home}
+
+FROM django-builder AS devcontainer
+# Target this stage for devcontainer setups
+
+ARG username=django
+ARG uid=266
+ARG gid=${uid}
+ARG user_home=/home/containeruser
+ARG app_home=/opt/app
+ARG venv_base_dir=${app_home}
+ARG venv_dir=${venv_base_dir}/.venv
+
+USER 0
+
+RUN --mount=type=cache,target=/var/cache/apk \
+  apk add \
+  git openssh-client \
+  postgresql-client \
+  fish starship zoxide nano docs
+
+USER $username
+
+# Copy fish shell configuration
+COPY --chown=${uid}:${gid} .devcontainer/fish/ ${user_home}/.config/fish/
+# Configure starship prompt for bash
+RUN echo 'eval "$(starship init bash)"' >> ${user_home}/.bashrc
+
+{% if cookiecutter.use_vite == "y" -%}
+# Copy node runtime from frontend-builder stage, for use in devcontainer
+COPY --from=frontend-builder /usr/local /usr/local
+# Copy node_modules from frontend-builder stage
+COPY --chown=${uid}:${gid} --from=frontend-builder ${app_home}/node_modules ${app_home}/node_modules
+
+{% endif -%}
+# "Activate" virtual environment
+ENV PATH=${venv_dir}/bin:${PATH}
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV DJANGO_RUNSERVER_HIDE_WARNING=true
+
+FROM django-base AS django-final
+# Production-ready image
+
+ARG uid=266
+ARG gid=${uid}
+ARG app_home=/opt/app
+ARG venv_base_dir=${app_home}
+ARG venv_dir=${venv_base_dir}/.venv
+
+# Copy virtual environment from django-builder stage
+COPY --chown=${uid}:${gid} --from=django-builder ${venv_dir} ${venv_dir}
+{% if cookiecutter.use_vite == "y" -%}
+# Copy frontend assets from frontend-builder stage
+COPY --chown=${uid}:${gid} --from=frontend-builder ${app_home}/static/dist ${app_home}/static/dist
+{% endif -%}
+# Setup media and static directories
+RUN mkdir -p "${app_home}/public/media" "${app_home}/public/static"
+# Copy application code to WORKDIR
+COPY --chown=${uid}:${gid} . ${app_home}
+# "Activate" virtual environment
+ENV PATH=${venv_dir}/bin:${PATH}
+
+ENTRYPOINT ["/start"]
+
+EXPOSE 8000/tcp

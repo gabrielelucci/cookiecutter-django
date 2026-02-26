@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+export GRANIAN_HOST="${GRANIAN_HOST:-0.0.0.0}"
+export GRANIAN_PORT="${GRANIAN_PORT:-8000}"
+export GRANIAN_INTERFACE="${GRANIAN_INTERFACE:-wsgi}"
+export GRANIAN_BACKLOG="${GRANIAN_BACKLOG:-1024}"
+export GRANIAN_BACKPRESSURE="${GRANIAN_BACKPRESSURE:-32}"
+export GRANIAN_WORKERS="${GRANIAN_WORKERS:-1}"
+export GRANIAN_BLOCKING_THREADS="${GRANIAN_BLOCKING_THREADS:-1}"
+
+granian {{ cookiecutter.project_slug }}.wsgi:application

@@ -1,0 +1,33 @@
+services:
+  app:
+    env_file: .env
+    deploy:
+      mode: replicated
+      replicas: 2
+
+  db:
+    env_file: .env
+
+  web:
+    image: docker.io/library/caddy:2-alpine
+    build:
+      dockerfile_inline: |
+        FROM docker.io/library/caddy:2-alpine
+        COPY ./containers/caddy/Caddyfile /etc/caddy/Caddyfile
+    restart: unless-stopped
+    environment:
+      - CADDY_DOMAIN
+    ports:
+      - "80:80/tcp"
+      - "443:443/tcp"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - django_media:/var/www/media
+    depends_on:
+      app:
+        condition: service_started
+
+volumes:
+  caddy_data: {}
+  django_media: {}

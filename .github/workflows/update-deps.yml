@@ -1,0 +1,77 @@
+name: Update Template Dependencies
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Every Monday at 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-deps:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      # ── Render the template with every feature enabled ──
+      - name: Render template
+        run: >-
+          uvx cookiecutter . --no-input -o /tmp/rendered
+          use_vite=y use_rest_api=y
+
+      # ── Resolve latest Python versions within constraints ──
+      - name: Resolve Python dependencies
+        working-directory: /tmp/rendered/my_project
+        run: uv lock --upgrade
+
+      # ── Bump JS devDependency ranges to latest ──
+      - name: Update JS dependencies
+        working-directory: /tmp/rendered/my_project
+        run: npx --yes npm-check-updates -u
+
+      # ── Patch the template source with the new versions ──
+      - name: Sync versions back to template
+        id: sync
+        run: |
+          output=$(python scripts/sync_deps.py /tmp/rendered/my_project) || true
+          echo "$output"
+          {
+            echo "changelog<<EOF"
+            echo "$output"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # ── Re-render from patched source to verify it still resolves ──
+      - name: Validate updated template
+        id: validate
+        continue-on-error: true
+        run: |
+          rm -rf /tmp/validate
+          uvx cookiecutter . --no-input -o /tmp/validate use_vite=y use_rest_api=y
+          cd /tmp/validate/my_project
+          uv lock
+
+      # ── Open (or update) a PR with the changes ──
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: deps/update-template-deps
+          commit-message: "chore(deps): update template dependencies"
+          title: "chore(deps): update template dependencies"
+          body: |
+            Automated weekly dependency update.
+
+            ${{ steps.sync.outputs.changelog }}
+
+            ---
+            **Validation:** ${{ steps.validate.outcome == 'success' && '✅ passed' || '⚠️ failed — needs manual review' }}
+          labels: ${{ steps.validate.outcome == 'success' && 'dependencies' || 'dependencies,needs-attention' }}

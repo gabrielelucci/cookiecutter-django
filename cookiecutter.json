@@ -1,0 +1,13 @@
+{
+  "project_name": "My Project",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_').replace('-', '_') }}",
+  "description": "A Django project.",
+  "author_name": "Your Name",
+  "author_email": "you@example.com",
+  "domain_name": "localhost",
+  "python_version": "3.14",
+  "postgres_version": "18",
+  "node_version": "24",
+  "use_vite": ["n", "y"],
+  "use_rest_api": ["n", "y"]
+}

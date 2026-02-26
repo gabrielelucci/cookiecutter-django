@@ -1,0 +1,56 @@
+services:
+  app:
+    image: {{ cookiecutter.project_slug }}:latest
+    restart: unless-stopped
+    volumes:
+      - django_static:/opt/app/public/static
+      - django_media:/opt/app/public/media
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8000/healthz/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 3s
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      mode: replicated
+      replicas: 1
+  db:
+    image: docker.io/library/postgres:{{ cookiecutter.postgres_version }}
+    build:
+      dockerfile_inline: |
+        FROM docker.io/library/postgres:{{ cookiecutter.postgres_version }}
+        COPY ./containers/postgres/postgresql.conf /etc/postgresql/postgresql.custom.conf
+    restart: unless-stopped
+    shm_size: 1g
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "${POSTGRES_USER:-postgres}",
+          "-d",
+          "${POSTGRES_DB:-postgres}",
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    command:
+      ["postgres", "-c", "config_file=/etc/postgresql/postgresql.custom.conf"]
+    deploy:
+      mode: global
+      resources:
+        limits:
+          cpus: "4"
+          memory: 4G
+
+volumes:
+  django_static: {}
+  django_media: {}
+  postgres_data: {}

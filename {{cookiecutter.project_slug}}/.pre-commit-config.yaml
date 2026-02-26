@@ -1,0 +1,34 @@
+repos:
+  - repo: builtin
+    hooks:
+      - id: trailing-whitespace
+      - id: check-added-large-files
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff linter
+        entry: ruff check --fix .
+        language: system
+        types: [python]
+      - id: ruff-format
+        name: ruff formatter
+        entry: ruff format .
+        language: system
+        types: [python]
+{%- if cookiecutter.use_vite == "y" %}
+      - id: biome
+        name: biome formatter and linter
+        entry: npx biome check --write .
+        language: system
+        types: [javascript, json]
+{%- endif %}
+      - id: commitizen
+        name: commitizen commit message checker
+        entry: cz check
+        language: system
+        stages: [commit-msg]
+      - id: djade
+        name: djade formatter
+        entry: djade
+        language: system
+        types: [html]

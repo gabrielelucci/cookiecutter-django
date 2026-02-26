@@ -1,0 +1,21 @@
+{% raw %}{% load static %}{% endraw %}
+{%- if cookiecutter.use_vite == "y" %}
+{% raw %}{% load django_vite %}{% endraw %}
+{%- endif %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% raw %}{% block title %}{% endraw %}{{ cookiecutter.project_name }}{% raw %}{% endblock %}{% endraw %}</title>
+{%- if cookiecutter.use_vite == "y" %}
+  {% raw %}{% vite_hmr_client %}{% endraw %}
+  {% raw %}{% vite_asset 'js/main.js' %}{% endraw %}
+{%- endif %}
+  {% raw %}{% block extra_css %}{% endblock %}{% endraw %}
+</head>
+<body>
+  {% raw %}{% block content %}{% endblock %}{% endraw %}
+  {% raw %}{% block extra_js %}{% endblock %}{% endraw %}
+</body>
+</html>
