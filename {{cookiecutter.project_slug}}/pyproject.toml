@@ -10,7 +10,7 @@ dependencies = [
     "psycopg[c,pool]~=3.3",
     "django-environ",
     "argon2-cffi",
-    "whitenoise[brotli]~=6.11",
+    "whitenoise[brotli]~=6.12",
     "granian~=2.7",
 {%- if cookiecutter.use_vite == "y" %}
     "django-vite>=3.1.0",
@@ -32,7 +32,7 @@ dev = [
     { include-group = "stubs" },
     "django-watchfiles>=1.4.0",
 ]
-lint = ["djade>=1.8.0", "mypy~=1.19", "ruff"]
+lint = ["djade>=1.9.0", "mypy~=1.19", "ruff"]
 stubs = [
     "django-stubs[compatible-mypy]",
 {%- if cookiecutter.use_rest_api == "y" %}
@@ -46,7 +46,7 @@ test = [
     "pytest-sugar~=1.1",
     "pytest~=9.0",
 ]
-tools = ["commitizen>=4.13.9", "prek>=0.3.3"]
+tools = ["commitizen>=4.13.9", "prek>=0.3.4"]
 
 [tool.uv]
 default-groups = ["dev"]
