@@ -16,7 +16,7 @@ dependencies = [
     "django-vite>=3.1.0",
 {%- endif %}
 {%- if cookiecutter.use_rest_api == "y" %}
-    "djangorestframework>=3.16.1",
+    "djangorestframework>=3.17.1",
     "django-filter>=25.2",
     "drf-spectacular>=0.29.0",
     "drf-nested-routers>=0.95.0",
@@ -46,7 +46,7 @@ test = [
     "pytest-sugar~=1.1",
     "pytest~=9.0",
 ]
-tools = ["commitizen>=4.13.9", "prek>=0.3.4"]
+tools = ["commitizen>=4.13.9", "prek>=0.3.8"]
 
 [tool.uv]
 default-groups = ["dev"]
