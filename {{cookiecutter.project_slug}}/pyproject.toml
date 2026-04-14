@@ -32,7 +32,7 @@ dev = [
     { include-group = "stubs" },
     "django-watchfiles>=1.4.0",
 ]
-lint = ["djade>=1.9.0", "mypy~=1.19", "ruff"]
+lint = ["djade>=1.9.0", "mypy~=1.20", "ruff"]
 stubs = [
     "django-stubs[compatible-mypy]",
 {%- if cookiecutter.use_rest_api == "y" %}
@@ -46,7 +46,7 @@ test = [
     "pytest-sugar~=1.1",
     "pytest~=9.0",
 ]
-tools = ["commitizen>=4.13.9", "prek>=0.3.8"]
+tools = ["commitizen>=4.13.10", "prek>=0.3.8"]
 
 [tool.uv]
 default-groups = ["dev"]
