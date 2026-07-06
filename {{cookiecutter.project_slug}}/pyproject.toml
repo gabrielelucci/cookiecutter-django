@@ -40,13 +40,13 @@ stubs = [
 {%- endif %}
 ]
 test = [
-    "coverage~=7.14",
+    "coverage~=7.15",
     "factory-boy~=3.3",
     "pytest-django~=4.12",
     "pytest-sugar~=1.1",
-    "pytest~=9.0",
+    "pytest~=9.1",
 ]
-tools = ["commitizen>=4.16.2", "prek>=0.4.0"]
+tools = ["commitizen>=4.16.4", "prek>=0.4.8"]
 
 [tool.uv]
 default-groups = ["dev"]
