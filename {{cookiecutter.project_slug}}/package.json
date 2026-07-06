@@ -14,9 +14,9 @@
 		"biome": "npm run format && npm run lint && npm run check"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.4.15",
-		"sass": "^1.99.0",
-		"vite": "^8.0.13"
+		"@biomejs/biome": "^2.5.2",
+		"sass": "^1.101.0",
+		"vite": "^8.1.3"
 	},
 	"dependencies": {}
 }
