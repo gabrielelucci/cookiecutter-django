@@ -6,20 +6,20 @@ description = "{{ cookiecutter.description }}"
 requires-python = ">={{ cookiecutter.python_version }}"
 
 dependencies = [
-    "django~=6.0",
+    "django~=6.1",
     "psycopg[c,pool]~=3.3",
     "django-environ",
     "argon2-cffi",
     "whitenoise[brotli]~=6.12",
-    "granian~=2.7",
+    "granian~=2.8",
 {%- if cookiecutter.use_vite == "y" %}
-    "django-vite>=3.1.0",
+    "django-vite>=3.2.0",
 {%- endif %}
 {%- if cookiecutter.use_rest_api == "y" %}
-    "djangorestframework>=3.17.1",
-    "django-filter>=25.2",
-    "drf-spectacular>=0.29.0",
-    "drf-nested-routers>=0.95.0",
+    "djangorestframework>=3.18.1",
+    "django-filter>=26.1",
+    "drf-spectacular>=0.30.0",
+    "drf-nested-routers>=0.95.3",
     "django-cors-headers>=4.9.0",
 {%- endif %}
 ]
@@ -40,13 +40,13 @@ stubs = [
 {%- endif %}
 ]
 test = [
-    "coverage~=7.15",
+    "coverage~=7.16",
     "factory-boy~=3.3",
-    "pytest-django~=4.12",
+    "pytest-django~=4.14",
     "pytest-sugar~=1.1",
     "pytest~=9.1",
 ]
-tools = ["commitizen>=4.16.4", "prek>=0.4.8"]
+tools = ["commitizen>=4.18.1", "prek>=0.5.3"]
 
 [tool.uv]
 default-groups = ["dev"]
